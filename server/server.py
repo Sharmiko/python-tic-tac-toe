@@ -1,9 +1,9 @@
-import types
 import socket
 import selectors
 from typing import Dict
 
 from conf import HOST, PORT
+from server.message import Message
 
 
 class Server:
@@ -12,6 +12,7 @@ class Server:
         self.sock: socket.socket = socket.socket(
             family=socket.AF_INET, type=socket.SOCK_STREAM
         )
+        self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.sock.bind((HOST, PORT))
         self.sock.listen()
         self.sock.setblocking(False)
@@ -21,6 +22,9 @@ class Server:
 
         # keep track of connected clients
         self.sessions: Dict[socket.socket] = {}
+        self.num_connections = 0
+
+        self.is_updated = False
 
     def close(self):
         self.sel.close()
@@ -36,18 +40,17 @@ class Server:
                         self.connect(sock=key.fileobj)
                     # serve existing connection
                     else:
-                        pass
-        finally:
+                        message = key.data
+                        message.process_events(mask)
+        except KeyboardInterrupt:
             self.close()
 
     def connect(self, sock: socket.socket) -> None:
         conn, addr = sock.accept()
         print('Accepted from', addr)
         conn.setblocking(False)
-        data = types.SimpleNamespace(
-            addr=addr,
-            inb=b'',
-            outb=b''
-        )
+        message = Message(selector=self.sel, sock=conn, addr=addr)
         events = selectors.EVENT_READ | selectors.EVENT_WRITE
-        self.sel.register(fileobj=conn, events=events, data=data)
+        self.sel.register(fileobj=conn, events=events, data=message)
+
+
