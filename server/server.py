@@ -1,12 +1,16 @@
+import time
 import socket
-import selectors
-from typing import Dict
+import select
+from typing import Dict, List
 
 from conf import HOST, PORT
-from server.message import Message
+from game.menu import Menu
+from base.message import MessageMixin
 
 
-class Server:
+class Server(MessageMixin):
+
+    menu = Menu()
 
     def __init__(self) -> None:
         self.sock: socket.socket = socket.socket(
@@ -17,40 +21,73 @@ class Server:
         self.sock.listen()
         self.sock.setblocking(False)
 
-        self.sel = selectors.DefaultSelector()
-        self.sel.register(self.sock, selectors.EVENT_READ, data=None)
-
         # keep track of connected clients
+        self.clients: List[socket.socket] = [self.sock]
         self.sessions: Dict[socket.socket] = {}
         self.num_connections = 0
 
         self.is_updated = False
 
     def close(self):
-        self.sel.close()
         self.sock.close()
+        self.num_connections -= 1
+        self.update_menu()
+
+    def serve_connection(self, conn: socket.socket) -> None:
+        try:
+            data = self.read_message(conn)
+            if data:
+                if conn not in self.sessions and 'input_message' in data:
+                    username = data['input_message']
+                    del data['input_message']
+                    self.menu.update(player=username)
+                    self.sessions[conn] = username
+                if 'input_message' in data:
+                    res = self.menu.handle_input(data['input_message'])
+                    conn.send(self.create_message({
+                        'message': res
+                    }))
+                else:
+                    conn.send(self.create_message({
+                        'message': self.menu.get_menu(),
+                        'requires_input': True
+                    }))
+        except (BlockingIOError, OSError):
+            time.sleep(0.1)
+        except ConnectionResetError:
+            conn.close()
+
+    def update_menu(self) -> None:
+        self.menu.players_online = self.num_connections
 
     def run(self) -> None:
         try:
             while True:
-                events = self.sel.select(timeout=None)
-                for key, mask in events:
-                    # handle new connection
-                    if key.data is None:
-                        self.connect(sock=key.fileobj)
-                    # serve existing connection
+                read_sockets, _, exception_sockets = select.select(
+                    self.clients, [], self.clients
+                )
+                for notified in read_sockets:
+                    if notified == self.sock:
+                        conn, addr = self.sock.accept()
+                        self.connect(conn=conn, addr=addr)
                     else:
-                        message = key.data
-                        message.process_events(mask)
+                        self.serve_connection(conn=notified)
+
+                for notified in exception_sockets:
+                    self.clients.remove(notified)
+                    if notified in self.sessions:
+                        del self.sessions[notified]
+
         except KeyboardInterrupt:
             self.close()
 
-    def connect(self, sock: socket.socket) -> None:
-        conn, addr = sock.accept()
-        print('Accepted from', addr)
+    def connect(self, conn: socket.socket, addr) -> None:
         conn.setblocking(False)
-        message = Message(selector=self.sel, sock=conn, addr=addr)
-        events = selectors.EVENT_READ | selectors.EVENT_WRITE
-        self.sel.register(fileobj=conn, events=events, data=message)
-
-
+        print('Accepted from', addr)
+        self.clients.append(conn)
+        self.num_connections += 1
+        self.update_menu()
+        conn.send(self.create_message({
+            'message': 'Enter user name: ',
+            'requires_input': True
+        }))

@@ -7,12 +7,14 @@ class Menu:
         self.players_online = 10
         self.open_lobbies = 5
         self.games_in_progress = 3
+        self.players = []
 
     def update(
         self,
         players_online: Optional[int] = None,
         open_lobbies: Optional[int] = None,
-        games_in_progress: Optional[int] = None
+        games_in_progress: Optional[int] = None,
+        player: Optional[str] = None
     ) -> None:
         if players_online:
             self.players_online = players_online
@@ -23,7 +25,31 @@ class Menu:
         if games_in_progress:
             self.games_in_progress = games_in_progress
 
-    def get_menu(self) -> bytes:
+        if player:
+            self.players.append(player)
+
+    def handle_input(self, inp: str):
+        if inp not in ['A', 'L', 'H', 'I', 'S']:
+            return 'Invalid input.'
+        return self._handle_input(inp)
+
+    def _handle_input(self, inp: str):
+        if inp == 'A':
+            pass
+
+        elif inp == 'L':
+            return self.list_players()
+
+        else:
+            print('Action not supported yet.')
+
+    def list_players(self) -> str:
+        text = ''
+        for row in self.players[:5]:
+            text += f'{row}\n'
+        return text + '...\n'
+
+    def get_menu(self) -> str:
         text = ''
         text += 'Welcome to Tic-Tac-Toe.\n'
         text += '-' * 40 + '\n'
@@ -40,9 +66,4 @@ class Menu:
         text += 'I - Invite player to match.\n'
         text += 'S - Display your statistics.\n'
 
-        return bytes(text.encode())
-
-
-if __name__ == '__main__':
-    m = Menu()
-    m.get_menu()
+        return text
