@@ -1,22 +1,22 @@
 import io
-import abc
 import sys
 import json
 import socket
 import struct
-
 from typing import Dict
 
+from conf import DEFAULT_ENCODING
 
-class MessageMixin(abc.ABC):
+
+class MessageMixin:
 
     def create_message(self, obj: Dict) -> bytes:
         return self._create_message(
-            content_bytes=self._json_encode(obj=obj, encoding='utf-8')
+            content_bytes=self._json_encode(obj=obj, encoding=DEFAULT_ENCODING)
         )
 
     def _create_message(self, content_bytes: bytes) -> bytes:
-        encoding = 'utf-8'
+        encoding = DEFAULT_ENCODING
         header = {
             'byteorder': sys.byteorder,
             'content-length': len(content_bytes),
@@ -42,7 +42,7 @@ class MessageMixin(abc.ABC):
                          header_length: int) -> Dict:
         recv_data = sock.recv(header_length)
         if recv_data and len(recv_data) == header_length:
-            json_data = self._json_decode(recv_data, encoding='utf-8')
+            json_data = self._json_decode(recv_data, encoding=DEFAULT_ENCODING)
             return json_data
 
     def _process_header(self, sock: socket.socket, header: Dict) -> Dict:
