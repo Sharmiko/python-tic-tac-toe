@@ -4,9 +4,9 @@ from typing import Optional
 class Menu:
 
     def __init__(self):
-        self.players_online = 10
-        self.open_lobbies = 5
-        self.games_in_progress = 3
+        self.players_online = 0
+        self.open_lobbies = 0
+        self.games_in_progress = 0
         self.players = []
 
     def update(
@@ -27,6 +27,10 @@ class Menu:
 
         if player:
             self.players.append(player)
+
+    def remove_user(self, user_name: str) -> None:
+        self.players.remove(user_name)
+        self.players_online -= 1
 
     def handle_input(self, inp: str):
         if inp not in ['A', 'L', 'H', 'I', 'S', 'M']:
