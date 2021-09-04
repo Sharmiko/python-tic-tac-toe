@@ -28,10 +28,17 @@ class Server(MessageMixin):
 
         self.is_updated = False
 
-    def close(self):
+    def close(self) -> None:
         self.sock.close()
         self.num_connections -= 1
         self.update_menu()
+
+    def disconnect_client(self, conn: socket.socket) -> None:
+        conn.close()
+        self.clients.remove(conn)
+        if conn in self.sessions:
+            self.menu.remove_user(self.sessions[conn])
+            del self.sessions[conn]
 
     def serve_connection(self, conn: socket.socket) -> None:
         try:
@@ -53,10 +60,12 @@ class Server(MessageMixin):
                         'message': self.menu.get_menu(),
                         'requires_input': True
                     }))
+            else:
+                self.disconnect_client(conn)
         except (BlockingIOError, OSError):
             time.sleep(0.1)
         except ConnectionResetError:
-            conn.close()
+            self.disconnect_client(conn)
 
     def update_menu(self) -> None:
         self.menu.players_online = self.num_connections

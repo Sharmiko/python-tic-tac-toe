@@ -1,6 +1,8 @@
 import curses
 from typing import Union, List
 
+from conf import DEFAULT_ENCODING
+
 
 std_scr = curses.initscr()
 curses.echo()
@@ -20,10 +22,11 @@ def print_flush(sequence: Union[List, str]) -> None:
 
 def std_input() -> str:
     res = std_scr.getstr()
-    return res.decode('utf-8')
+    return res.decode(encoding=DEFAULT_ENCODING)
 
 
 def reset_scr():
     curses.nocbreak()
     std_scr.keypad(False)
     curses.echo()
+    curses.endwin()

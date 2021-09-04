@@ -1,9 +1,5 @@
 import sys
-import time
 import socket
-import struct
-from typing import Dict
-
 
 from conf import HOST, PORT
 from base.message import MessageMixin
@@ -41,7 +37,9 @@ class Client(MessageMixin):
                         self.write()
                 else:
                     sys.exit(-1)
-            except BlockingIOError:
+            except (BlockingIOError, OSError):
                 continue
             except KeyboardInterrupt:
-                print('Exiting')
+                self.sock.close()
+                print_flush('Exiting')
+                sys.exit()
