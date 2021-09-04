@@ -45,7 +45,8 @@ class Server(MessageMixin):
                 if 'input_message' in data:
                     res = self.menu.handle_input(data['input_message'])
                     conn.send(self.create_message({
-                        'message': res
+                        'message': res,
+                        'requires_input': True
                     }))
                 else:
                     conn.send(self.create_message({

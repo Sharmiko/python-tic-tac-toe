@@ -7,6 +7,7 @@ from typing import Dict
 
 from conf import HOST, PORT
 from base.message import MessageMixin
+from utils.utils import print_flush, std_input
 
 
 class Client(MessageMixin):
@@ -25,7 +26,7 @@ class Client(MessageMixin):
         self.sock.close()
 
     def write(self) -> None:
-        inp = input()
+        inp = std_input()
         self.sock.send(self.create_message({
             'input_message': inp
         }))
@@ -35,7 +36,7 @@ class Client(MessageMixin):
             try:
                 data = self.read_message(self.sock)
                 if data:
-                    print(data['message'])
+                    print_flush(data['message'])
                     if data.get('requires_input', False):
                         self.write()
                 else:

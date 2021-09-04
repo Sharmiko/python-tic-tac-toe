@@ -1,7 +1,9 @@
 import sys
 import atexit
+
 from server.server import Server
 from client.client import Client
+from utils.utils import reset_scr
 
 
 def main() -> None:
@@ -22,6 +24,8 @@ def main() -> None:
         raise ValueError(
             'Incorrect socket type specified. Must be "server" or "client"'
         )
+
+    atexit.register(reset_scr)
 
 
 if __name__ == '__main__':
