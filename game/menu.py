@@ -32,47 +32,27 @@ class Menu:
         self.players.remove(user_name)
         self.players_online -= 1
 
-    def handle_input(self, inp: str):
-        if inp not in ['A', 'L', 'H', 'I', 'S', 'M']:
-            return 'Invalid input.'
-        return self._handle_input(inp)
-
-    def _handle_input(self, inp: str):
-        if inp == 'A':
-            pass
-
-        elif inp == 'L':
-            text = self.list_players()
-            text += '\nAction:\nM - Return to menu'
-            return text
-        elif inp == 'M':
-            return self.get_menu()
-        else:
-            return 'Action not supported yet.'
-
     def list_players(self) -> str:
         text = ''
         for row in self.players[:5]:
             text += f'{row}\n'
         return text + '...\n'
 
-    def get_menu(self) -> list:
-        text = []
-        text.append('Welcome to Tic-Tac-Toe.\n')
-        text.append('-' * 40 + '\n')
+    def get_menu(self) -> str:
+        text = ''
+        text += 'Welcome to Tic-Tac-Toe.\n'
+        text += '-' * 40 + '\n'
 
-        text.append(
-            f'Players Online: {self.players_online} (Including you).\n'
-        )
-        text.append(f'Open Lobbies: {self.open_lobbies}\n')
-        text.append(f'Games in progress: {self.games_in_progress}\n')
-        text.append('-' * 40 + '\n')
+        text += f'Players Online: {self.players_online} (Including you).\n'
+        text += f'Open Lobbies: {self.open_lobbies}\n'
+        text += f'Games in progress: {self.games_in_progress}\n'
+        text += '-' * 40 + '\n'
 
-        text.append('Actions:\n')
-        text.append('F - Find online match.\n')
-        text.append('L - List players online.\n')
-        text.append('H - Host online match.\n')
-        text.append('I - Invite player to match.\n')
-        text.append('S - Display your statistics.\n')
+        text += 'Actions:\n'
+        text += 'F - Find online match.\n'
+        text += 'L - List players online.\n'
+        text += 'H - Host online match.\n'
+        text += 'I - Invite player to match.\n'
+        text += 'S - Display your statistics.\n'
 
         return text

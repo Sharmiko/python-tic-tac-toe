@@ -41,9 +41,3 @@ class Board:
         board += '|---' * self.width + '|\n'
 
         print(board)
-
-
-if __name__ == '__main__':
-    b = Board(3, 3)
-    b.draw()
-    print(b.board_data)

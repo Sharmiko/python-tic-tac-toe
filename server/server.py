@@ -1,4 +1,5 @@
 import time
+import queue
 import socket
 import select
 from typing import Dict, List
@@ -6,9 +7,10 @@ from typing import Dict, List
 from conf import HOST, PORT
 from game.menu import Menu
 from base.message import MessageMixin
+from server.handlers import ActionHandler
 
 
-class Server(MessageMixin):
+class Server(MessageMixin, ActionHandler):
 
     menu = Menu()
 
@@ -25,6 +27,8 @@ class Server(MessageMixin):
         self.clients: List[socket.socket] = [self.sock]
         self.sessions: Dict[socket.socket] = {}
         self.num_connections = 0
+
+        self.queue = queue.Queue()
 
         self.is_updated = False
 
@@ -50,7 +54,9 @@ class Server(MessageMixin):
                     self.menu.update(player=username)
                     self.sessions[conn] = username
                 if 'input_message' in data:
-                    res = self.menu.handle_input(data['input_message'])
+                    res = self.handle_input(
+                        inp=data['input_message'], conn=conn
+                    )
                     conn.send(self.create_message({
                         'message': res,
                         'requires_input': True
